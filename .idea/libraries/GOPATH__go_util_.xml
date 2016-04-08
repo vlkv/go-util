@@ -29,6 +29,7 @@
       <root url="file://$PROJECT_DIR$/../../spf13/jwalterweatherman/.git" />
       <root url="file://$PROJECT_DIR$/../../stretchr/testify/.git" />
       <root url="file://$PROJECT_DIR$/../../lib/pq/.git" />
+      <root url="file://$PROJECT_DIR$/../../hoisie/mustache/.git" />
     </excluded>
   </library>
 </component>
