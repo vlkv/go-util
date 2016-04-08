@@ -9,16 +9,16 @@ import (
 	"math/rand"
 )
 
-func ParseVersion(pineVersionStr string) (int64, int64) {
+func ParseVersion(pineVersionStr string) (uint64, uint64) {
 	versions := strings.Split(pineVersionStr, ".")
 	if len(versions) == 1 {
 		maj := versions[0]
-		return mustParseInt(maj), 0
+		return mustParseUint(maj), 0
 
 	} else if len(versions) == 2 {
 		maj := versions[0]
 		min := versions[1]
-		return mustParseInt(maj), mustParseInt(min)
+		return mustParseUint(maj), mustParseUint(min)
 
 	} else {
 		// TODO: do not use http
@@ -35,6 +35,13 @@ func mustParseInt(s string) int64 {
 	return pineVersion
 }
 
+func mustParseUint(s string) uint64 {
+	var pineVersion, err = strconv.ParseUint(s, 10, 0)
+	if err != nil {
+		panic(CreateHttpError(http.StatusBadRequest, fmt.Sprintf("Cannot convert version %s to uint, reason %v", s, err)))
+	}
+	return pineVersion
+}
 
 func TimeNowUnixMillis() int64 {
 	return time.Now().UnixNano() / 1000000
