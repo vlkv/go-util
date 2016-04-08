@@ -2,14 +2,14 @@ package util
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"errors"
 )
 
 func JsonParse(jsonStr string) (jsonObj interface{}) {
 	err := json.Unmarshal([]byte(jsonStr), &jsonObj)
 	if err != nil {
-		panic(CreateHttpError(http.StatusInternalServerError, fmt.Sprintf("Cannot decode json '%v', reason %v", jsonStr, err)))
+		panic(errors.New(fmt.Sprintf("Cannot decode json '%v', reason %v", jsonStr, err)))
 	}
 	return
 }
@@ -17,7 +17,7 @@ func JsonParse(jsonStr string) (jsonObj interface{}) {
 func JsonEncode(jsonObj interface{}) (jsonStr []byte) {
 	jsonStr, err := json.Marshal(jsonObj)
 	if err != nil {
-		panic(CreateHttpError(http.StatusInternalServerError, fmt.Sprintf("Cannot encode json %v, reason %v", jsonObj, err)))
+		panic(errors.New(fmt.Sprintf("Cannot encode json %v, reason %v", jsonObj, err)))
 	}
 	return
 }
