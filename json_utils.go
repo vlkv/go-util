@@ -6,8 +6,7 @@ import (
 	"fmt"
 )
 
-// TODO: Rename to JsonParse
-func ParseJson(jsonStr string) (jsonObj interface{}) {
+func JsonParse(jsonStr string) (jsonObj interface{}) {
 	err := json.Unmarshal([]byte(jsonStr), &jsonObj)
 	if err != nil {
 		panic(CreateHttpError(http.StatusInternalServerError, fmt.Sprintf("Cannot decode json '%v', reason %v", jsonStr, err)))

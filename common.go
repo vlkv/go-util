@@ -5,8 +5,6 @@ import (
 	"strings"
 	"fmt"
 	"strconv"
-	"time"
-	"math/rand"
 )
 
 func ParseVersion(pineVersionStr string) (int64, int64) {
@@ -35,18 +33,3 @@ func mustParseInt(s string) int64 {
 	return pineVersion
 }
 
-
-func TimeNowUnixMillis() int64 {
-	return time.Now().UnixNano() / 1000000
-}
-
-
-func GenerateId(n int) string {
-	rand.Seed(time.Now().UnixNano())
-	const letterBytes = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Int63() % int64(len(letterBytes))]
-	}
-	return string(b)
-}

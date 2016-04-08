@@ -3,6 +3,8 @@ package util
 import (
 	"strings"
 	"regexp"
+	"math/rand"
+	"time"
 )
 
 func Abbrev(s string) (res string) {
@@ -30,4 +32,15 @@ func Abbrev(s string) (res string) {
 func StripMargin(s string) string {
 	r := regexp.MustCompile(`(?m:^[ \t]*\|)`)
 	return r.ReplaceAllLiteralString(s, "")
+}
+
+
+func GenerateRandStr(n int) string {
+	rand.Seed(time.Now().UnixNano())
+	const letterBytes = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Int63() % int64(len(letterBytes))]
+	}
+	return string(b)
 }

@@ -16,25 +16,33 @@ import (
 
 func HttpGet(url string) (code int, jsonObj interface{}) {
 	code, body := httpGet(url, map[string]string{})
-	jsonObj = ParseJson(body)
+	if body != "" {
+		jsonObj = JsonParse(body)
+	}
 	return
 }
 
 func HttpPost(url string, data url.Values) (code int, jsonObj interface{}) {
 	code, body := httpPost(url, data, map[string]string{})
-	jsonObj = ParseJson(body)
+	if body != "" {
+		jsonObj = JsonParse(body)
+	}
 	return
 }
 
 func HttpGetExt(url string, additionalHeaders map[string]string) (code int, jsonObj interface{}) {
 	code, body := httpGet(url, additionalHeaders)
-	jsonObj = ParseJson(body)
+	if body != "" {
+		jsonObj = JsonParse(body)
+	}
 	return
 }
 
 func HttpPostExt(url string, data url.Values, additionalHeaders map[string]string) (code int, jsonObj interface{}) {
 	code, body := httpPost(url, data, additionalHeaders)
-	jsonObj = ParseJson(body)
+	if body != "" {
+		jsonObj = JsonParse(body)
+	}
 	return
 }
 

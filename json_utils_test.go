@@ -22,7 +22,7 @@ func TestJsonEncode(t *testing.T) {
 
 func TestJsonParseAndJsonGet(t *testing.T) {
 	JsonStr := "{\"child\":{\"bool\":true},\"float\":3.14,\"integer\":10,\"string\":\"some text\"}"
-	parent := ParseJson(JsonStr).(map[string]interface{})
+	parent := JsonParse(JsonStr).(map[string]interface{})
 	assert.Equal(t, 4, len(parent))
 	assert.Equal(t, 10.0, JsonGet(parent, "integer").(float64)) // NOTE: It's not int after parse!
 	assert.Equal(t, 3.14, JsonGet(parent, "float").(float64))
