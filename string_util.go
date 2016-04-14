@@ -44,3 +44,8 @@ func GenerateRandStr(n int) string {
 	}
 	return string(b)
 }
+
+func IsBase64(str string) bool {
+	r := regexp.MustCompile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
+	return r.MatchString(str)
+}
