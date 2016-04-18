@@ -107,6 +107,14 @@ func FormValueReq(r *http.Request, key string, msgWhenError string) string {
 	return res
 }
 
+func FormValueOpt(r *http.Request, key string, defaultValue string) string {
+	var res = r.FormValue(key)
+	if res == "" {
+		return defaultValue
+	}
+	return res
+}
+
 func QueryValueReq(r *http.Request, key string, msgWhenError string) string {
 	values := r.URL.Query()
 	res := values.Get(key)
@@ -129,6 +137,14 @@ func ParamByNameReq(ps *httprouter.Params, key string, msgWhenError string) stri
 	var res = ps.ByName(key)
 	if res == "" {
 		panic(CreateHttpError(http.StatusBadRequest, fmt.Sprintf("Argument %s is not given, %s", key, msgWhenError)))
+	}
+	return res
+}
+
+func ParamByNameOpt(ps *httprouter.Params, key string, defaultValue string) string {
+	var res = ps.ByName(key)
+	if res == "" {
+		return defaultValue
 	}
 	return res
 }
