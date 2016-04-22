@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"errors"
+	"bytes"
+	"text/template"
 )
 
 func ParseVersion(pineVersionStr string) (int64, int64) {
@@ -31,3 +33,11 @@ func mustParseInt(s string) int64 {
 	return pineVersion
 }
 
+func MustExecuteTemplate(t *template.Template, data interface{}) string {
+	var buf bytes.Buffer
+	err := t.Execute(&buf, data)
+	if err != nil {
+		panic(err)
+	}
+	return buf.String()
+}

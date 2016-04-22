@@ -1,10 +1,10 @@
 <component name="libraryTable">
   <library name="GOPATH &lt;go-util&gt;">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../pine_repo" />
-      <root url="file://$PROJECT_DIR$/../github.com" />
-      <root url="file://$PROJECT_DIR$/../gopkg.in" />
-      <root url="file://$PROJECT_DIR$/../pine_facade" />
+      <root url="file://$PROJECT_DIR$/../../../pine_repo" />
+      <root url="file://$PROJECT_DIR$/../.." />
+      <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../../../pine_facade" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
