@@ -48,3 +48,28 @@ func TestJsonPut(t *testing.T) {
 	assert.Equal(t, "new_val2", JsonGet(parent, "child", "non_existing_field"))
 }
 
+func TestJsonMerge(t *testing.T) {
+	dst := map[string]interface{} {
+		"name": "Bob",
+		"salary": 1000000.0,
+		"children": [...]string{"Mary", "Kevin", "Nancy"},
+		"subObj": map[string]interface{} {
+			"a": "dstA",
+			"b": "dstB",
+		},
+	}
+
+	src := map[string]interface{}{
+		"name": "Alice",
+		"children": [...]int{1, 2, 3},
+		"subObj": map[string]interface{} {
+			"b": "srcB",
+			"c": "srcC",
+		},
+	}
+
+	JsonMerge(dst, src)
+
+	dstStr := JsonEncode(dst)
+	assert.Equal(t, "{\"children\":[1,2,3],\"name\":\"Alice\",\"salary\":1e+06,\"subObj\":{\"b\":\"srcB\",\"c\":\"srcC\"}}", string(dstStr))
+}

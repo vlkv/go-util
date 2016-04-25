@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"errors"
+	"github.com/imdario/mergo"
 )
 
 func JsonParse(jsonStr string) (jsonObj interface{}) {
@@ -40,4 +41,11 @@ func JsonPut(jsonObj interface{}, val interface{}, keys ...string) {
 	}
 	lastKey := keys[len(keys)-1]
 	curr[lastKey] = val
+}
+
+func JsonMerge(jsonObjDst map[string]interface{}, jsonObjSrc map[string]interface{}) {
+	err := mergo.MergeWithOverwrite(&jsonObjDst, jsonObjSrc)
+	if err != nil {
+		panic(errors.New(fmt.Sprintf("Could not merge json objs, reason: %v", err)))
+	}
 }
