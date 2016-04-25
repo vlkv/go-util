@@ -33,6 +33,20 @@ func JsonGet(jsonObj interface{}, keys ...string) interface{} {
 	return curr[lastKey]
 }
 
+func JsonGetWithDefault(jsonObj interface{}, defaultValue interface{}, keys ...string) (result interface{}) {
+	defer func() {
+		if err := recover(); err != nil {
+			result = defaultValue
+		}
+	}()
+
+	result = JsonGet(jsonObj, keys...)
+	if result == nil {
+		result = defaultValue
+	}
+	return
+}
+
 func JsonPut(jsonObj interface{}, val interface{}, keys ...string) {
 	curr := jsonObj.(map[string]interface{})
 	for i := 0; i < len(keys)-1; i++ {

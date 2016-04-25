@@ -3,7 +3,6 @@ package util
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 func TestIsBase64(t *testing.T) {
@@ -21,6 +20,5 @@ func TestStripMargin(t *testing.T) {
 	|    |8910
     11`)
 
-	fmt.Println(str)
 	assert.Equal(t, "1\n234\n    567\n    |8910\n    11", str)
 }

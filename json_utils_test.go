@@ -73,3 +73,24 @@ func TestJsonMerge(t *testing.T) {
 	dstStr := JsonEncode(dst)
 	assert.Equal(t, "{\"children\":[1,2,3],\"name\":\"Alice\",\"salary\":1e+06,\"subObj\":{\"b\":\"srcB\",\"c\":\"srcC\"}}", string(dstStr))
 }
+
+func TestJsonGetWithDefault(t *testing.T) {
+	obj := map[string]interface{} {
+		"name": "Alice",
+		"children": [...]int{1, 2, 3},
+		"subObj": map[string]interface{} {
+			"b": "srcB",
+			"c": "srcC",
+			"reallyDeepObj": map[string]interface{} {
+				"1": "one",
+				"3": "three",
+			},
+		},
+	}
+
+	assert.Equal(t, "srcC", JsonGetWithDefault(obj, "defVal", "subObj", "c"))
+	assert.Equal(t, "defVal", JsonGetWithDefault(obj, "defVal", "subObj", "a"))
+	assert.Equal(t, "defVal", JsonGetWithDefault(obj, "defVal", "subObj", "nonExistentLevel", "nonExistentDeepObj"))
+	assert.Equal(t, "one", JsonGetWithDefault(obj, "defVal", "subObj", "reallyDeepObj", "1"))
+	assert.Equal(t, "defVal", JsonGetWithDefault(obj, "defVal", "subObj", "reallyDeepObj", "2"))
+}
