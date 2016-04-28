@@ -41,3 +41,24 @@ func MustExecuteTemplate(t *template.Template, data interface{}) string {
 	}
 	return buf.String()
 }
+
+/*
+Returns element index of a slice (of any type!) for which given predicate is true. Returns -1 if not found.
+Taken from http://stackoverflow.com/a/18203895
+xs := []int{2, 4, 6, 8}
+ys := []string{"C", "B", "K", "A"}
+
+fmt.Println(
+    FindIndex(len(xs), func(i int) bool { return xs[i] == 5 }),
+    FindIndex(len(xs), func(i int) bool { return xs[i] == 6 }),
+    FindIndex(len(ys), func(i int) bool { return ys[i] == "Z" }),
+    FindIndex(len(ys), func(i int) bool { return ys[i] == "A" }))
+*/
+func FindIndex(limit int, predicate func(i int) bool) int {
+	for i := 0; i < limit; i++ {
+		if predicate(i) {
+			return i
+		}
+	}
+	return -1
+}
