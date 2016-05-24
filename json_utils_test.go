@@ -94,3 +94,15 @@ func TestJsonGetWithDefault(t *testing.T) {
 	assert.Equal(t, "one", JsonGetWithDefault(obj, "defVal", "subObj", "reallyDeepObj", "1"))
 	assert.Equal(t, "defVal", JsonGetWithDefault(obj, "defVal", "subObj", "reallyDeepObj", "2"))
 }
+
+func TestMustGetJsonTagName(t *testing.T) {
+	type TagCheck struct {
+		Num int `json:"number"`
+		Str string `json:"name,-"`
+		NoTag string
+	}
+	tagCheck := TagCheck{1, "2", "3"}
+	assert.Equal(t, "number", MustGetJsonTagName(tagCheck, "Num"))
+	assert.Equal(t, "name", MustGetJsonTagName(tagCheck, "Str"))
+	assert.Equal(t, "NoTag", MustGetJsonTagName(tagCheck, "NoTag"))
+}

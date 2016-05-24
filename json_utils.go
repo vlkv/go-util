@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"errors"
 	"github.com/imdario/mergo"
+	"reflect"
+	"strings"
 )
 
 func JsonParse(jsonStr string) (jsonObj interface{}) {
@@ -62,4 +64,24 @@ func JsonMerge(jsonObjDst map[string]interface{}, jsonObjSrc map[string]interfac
 	if err != nil {
 		panic(errors.New(fmt.Sprintf("Could not merge json objs, reason: %v", err)))
 	}
+}
+
+
+func parseJsonTag(tag string) (tagOptions string) {
+	if idx := strings.Index(tag, ","); idx != -1 {
+		return tag[:idx]
+	}
+	return tag
+}
+
+func MustGetJsonTagName(obj interface{}, fieldName string) (tagName string) {
+	t := reflect.TypeOf(obj)
+	field, found := t.FieldByName(fieldName); if !found {
+		panic(fmt.Sprintf("Not found json tag in field %s", fieldName))
+	}
+	tagName = parseJsonTag(field.Tag.Get("json"))
+	if tagName == "" {
+		tagName = fieldName
+	}
+	return tagName
 }
