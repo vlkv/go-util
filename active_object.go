@@ -35,7 +35,7 @@ func (this *ActiveObject) ExecuteSync(f func()) {
 			err := recover()
 			if err != nil {
 				stack := string(debug.Stack()[:])
-				log.Errorf("ActiveObject.ExecuteSync(%v) panic:\n%v\n%v\n", f, err, stack)
+				log.Errorf("ActiveObject.ExecuteSync(%T) panic:\n%v\n%v\n", f, err, stack)
 			}
 			waitCh <- err
 		}()
