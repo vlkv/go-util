@@ -145,18 +145,26 @@ func CreateHttpRoute(path string, method HttpMethod, params []HttpParam, handler
 	}
 }
 
-func (this *HttpRouter) DeclareRouteGET(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+func (this *HttpRouter) DeclareRouteGET(routeId string, path string, handler HttpHandler, params ...HttpParam) {
 	route := CreateHttpRoute(path, HttpMethod_GET, params, handler)
-	this.routes[routeId.String()] = &route
+	this.routes[routeId] = &route
+}
+
+func (this *HttpRouter) DeclareRouteGET(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+	this.DeclareRouteGET(routeId.String(), path, handler, params...)
+}
+
+func (this *HttpRouter) DeclareRoutePOST(routeId string, path string, handler HttpHandler, params ...HttpParam) {
+	route := CreateHttpRoute(path, HttpMethod_POST, params, handler)
+	this.routes[routeId] = &route
 }
 
 func (this *HttpRouter) DeclareRoutePOST(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
-	route := CreateHttpRoute(path, HttpMethod_POST, params, handler)
-	this.routes[routeId.String()] = &route
+	this.DeclareRoutePOST(routeId.String(), path, handler, params...)
 }
 
-func (this *HttpRouter) BindRoute(routeId fmt.Stringer, handler HttpHandler) {
-	route, ok := this.routes[routeId.String()]
+func (this *HttpRouter) BindRoute(routeId string, handler HttpHandler) {
+	route, ok := this.routes[routeId]
 	if !ok {
 		panic(errors.New(fmt.Sprintf("Route %s not found, cannot bind", routeId)))
 	}
@@ -164,6 +172,10 @@ func (this *HttpRouter) BindRoute(routeId fmt.Stringer, handler HttpHandler) {
 		panic(errors.New(fmt.Sprintf("Route %s is already bound, cannot rebind", routeId)))
 	}
 	route.Handler = handler
+}
+
+func (this *HttpRouter) BindRoute(routeId fmt.Stringer, handler HttpHandler) {
+	this.BindRoute(routeId.String(), handler)
 }
 
 func (this *HttpRouter) addAllDeclaredRoutes() {
