@@ -150,7 +150,7 @@ func (this *HttpRouter) DeclareRouteGET(routeId string, path string, handler Htt
 	this.routes[routeId] = &route
 }
 
-func (this *HttpRouter) DeclareRouteGET(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+func (this *HttpRouter) DeclareRouteGET2(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
 	this.DeclareRouteGET(routeId.String(), path, handler, params...)
 }
 
@@ -159,7 +159,7 @@ func (this *HttpRouter) DeclareRoutePOST(routeId string, path string, handler Ht
 	this.routes[routeId] = &route
 }
 
-func (this *HttpRouter) DeclareRoutePOST(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+func (this *HttpRouter) DeclareRoutePOST2(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
 	this.DeclareRoutePOST(routeId.String(), path, handler, params...)
 }
 
@@ -174,7 +174,7 @@ func (this *HttpRouter) BindRoute(routeId string, handler HttpHandler) {
 	route.Handler = handler
 }
 
-func (this *HttpRouter) BindRoute(routeId fmt.Stringer, handler HttpHandler) {
+func (this *HttpRouter) BindRoute2(routeId fmt.Stringer, handler HttpHandler) {
 	this.BindRoute(routeId.String(), handler)
 }
 
