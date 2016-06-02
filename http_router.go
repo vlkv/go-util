@@ -12,13 +12,13 @@ import (
 
 type HttpRouter struct {
 	router *httprouter.Router
-	routes map[string]HttpRoute
+	routes map[string]*HttpRoute
 }
 
 func NewHttpRouter() *HttpRouter {
 	result := HttpRouter{}
 	result.router = httprouter.New()
-	result.routes = map[string]HttpRoute{}
+	result.routes = map[string]*HttpRoute{}
 	return &result
 }
 
@@ -26,6 +26,7 @@ type HttpHandler func(w http.ResponseWriter, r *http.Request, paramValues map[st
 
 type HttpRoute struct {
 	Path string
+	Method HttpMethod
 	UrlParams []HttpParam
 	QueryParams []HttpParam
 	FormParams []HttpParam
@@ -40,7 +41,7 @@ func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map
 		}
 		var val string
 		if p.IsRequired() {
-			val = ParamByNameReq(&ps, p.Name, "")
+			val = ParamByNameReq(&ps, p.Name, this.Path)
 		} else {
 			val = ParamByNameOpt(&ps, p.Name, p.DefaultValue)
 		}
@@ -56,7 +57,7 @@ func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map
 		} else {
 			var val string
 			if p.IsRequired() {
-				val = QueryValueReq(r, p.Name, "")
+				val = QueryValueReq(r, p.Name, this.Path)
 			} else {
 				val = QueryValueOpt(r, p.Name, p.DefaultValue)
 			}
@@ -73,7 +74,7 @@ func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map
 		} else {
 			var val string
 			if p.IsRequired() {
-				val = FormValueReq(r, p.Name, "")
+				val = FormValueReq(r, p.Name, this.Path)
 			} else {
 				val = FormValueOpt(r, p.Name, p.DefaultValue)
 			}
@@ -107,7 +108,13 @@ const (
 	HttpParamType_Form
 )
 
-func CreateHttpRoute(path string, params []HttpParam, handler HttpHandler) HttpRoute {
+type HttpMethod int
+const (
+	HttpMethod_GET HttpMethod = iota
+	HttpMethod_POST
+)
+
+func CreateHttpRoute(path string, method HttpMethod, params []HttpParam, handler HttpHandler) HttpRoute {
 	re := regexp.MustCompile(":[\\w-]+")
 	urlParams := re.FindAllString(path, -1)
 	for _, urlParam := range urlParams {
@@ -130,6 +137,7 @@ func CreateHttpRoute(path string, params []HttpParam, handler HttpHandler) HttpR
 
 	return HttpRoute{
 		Path: path,
+		Method: method,
 		UrlParams: filterParams(HttpParamType_URL, params),
 		QueryParams: filterParams(HttpParamType_Query, params),
 		FormParams: filterParams(HttpParamType_Form, params),
@@ -137,22 +145,48 @@ func CreateHttpRoute(path string, params []HttpParam, handler HttpHandler) HttpR
 	}
 }
 
-func (this *HttpRouter) AddRouteGET(routeId, path string, handler HttpHandler, params ...HttpParam) {
-	route := CreateHttpRoute(path, params, handler)
-	this.routes[routeId] = route
-	this.addRoute(this.router.GET, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		paramValues := route.getParamValues(r, ps)
-		handler(w, r, paramValues)
-	})
+func (this *HttpRouter) DeclareRouteGET(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+	route := CreateHttpRoute(path, HttpMethod_GET, params, handler)
+	this.routes[routeId.String()] = &route
 }
 
-func (this *HttpRouter) AddRoutePOST(routeId, path string, handler HttpHandler, params ...HttpParam, ) {
-	route := CreateHttpRoute(path, params, handler)
-	this.routes[routeId] = route
-	this.addRoute(this.router.POST, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		paramValues := route.getParamValues(r, ps)
-		handler(w, r, paramValues)
-	})
+func (this *HttpRouter) DeclareRoutePOST(routeId fmt.Stringer, path string, handler HttpHandler, params ...HttpParam) {
+	route := CreateHttpRoute(path, HttpMethod_POST, params, handler)
+	this.routes[routeId.String()] = &route
+}
+
+func (this *HttpRouter) BindRoute(routeId fmt.Stringer, handler HttpHandler) {
+	route, ok := this.routes[routeId.String()]
+	if !ok {
+		panic(errors.New(fmt.Sprintf("Route %s not found, cannot bind", routeId)))
+	}
+	if route.Handler != nil {
+		panic(errors.New(fmt.Sprintf("Route %s is already bound, cannot rebind", routeId)))
+	}
+	route.Handler = handler
+}
+
+func (this *HttpRouter) addAllDeclaredRoutes() {
+	for routeId, _ := range this.routes {
+		route := this.routes[routeId]
+		var methodFunc func (string, httprouter.Handle)
+		if route.Method == HttpMethod_GET {
+			methodFunc = this.router.GET
+		} else if route.Method == HttpMethod_POST {
+			methodFunc = this.router.POST
+		} else {
+			panic(errors.New(fmt.Sprintf("Unexpected method: %v", route.Method)))
+		}
+
+		if route.Handler == nil {
+			panic(errors.New(fmt.Sprintf("Route %v has unbinded handler, cannot use such route", route.Path)))
+		}
+
+		this.addRoute(methodFunc, route.Path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			paramValues := route.getParamValues(r, ps)
+			route.Handler(w, r, paramValues)
+		})
+	}
 }
 
 func (this *HttpRouter) AddNotFoundRoute(handler http.HandlerFunc) {
@@ -160,11 +194,12 @@ func (this *HttpRouter) AddNotFoundRoute(handler http.HandlerFunc) {
 }
 
 func (this *HttpRouter) ListenAndServe(addr string) error {
+	this.addAllDeclaredRoutes()
 	return http.ListenAndServe(addr, this.router)
 }
 
-func (this *HttpRouter) addRoute(routerMethod func (string, httprouter.Handle), route string, handler httprouter.Handle) {
+func (this *HttpRouter) addRoute(methodFunc func (string, httprouter.Handle), route string, handler httprouter.Handle) {
 	routeNoTrailingSlash := strings.TrimRight(route, "/")
-	routerMethod(routeNoTrailingSlash, handler)
-	routerMethod(routeNoTrailingSlash + "/", handler)
+	methodFunc(routeNoTrailingSlash, handler)
+	methodFunc(routeNoTrailingSlash + "/", handler)
 }
