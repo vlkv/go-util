@@ -6,6 +6,7 @@ import (
 	"errors"
 	"regexp"
 	"fmt"
+	"strings"
 )
 
 
@@ -48,7 +49,7 @@ func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map
 	for _, p := range this.QueryParams {
 		if p.IsMultiple {
 			if p.IsRequired() {
-				panic(errors.New("You should not use both IsMultiple=true and IsRequired=true"))
+				panic(errors.New("You should use IsMultiple=true only with ForceOptional=true"))
 			}
 			vals := r.URL.Query()[p.Name]
 			paramValues[p.Name] = vals
@@ -87,11 +88,16 @@ type HttpParam struct {
 	Type HttpParamType
 	Name string
 	DefaultValue string // Has sense only when IsMultiple==false
+	ForceOptional bool
 	IsMultiple bool
 }
 
 func (this *HttpParam) IsRequired() bool {
-	return this.DefaultValue == ""
+	return this.DefaultValue == "" && !this.ForceOptional
+}
+
+func (this *HttpParam) IsOptional() bool {
+	return !this.IsRequired()
 }
 
 type HttpParamType int
@@ -134,7 +140,7 @@ func CreateHttpRoute(path string, params []HttpParam, handler HttpHandler) HttpR
 func (this *HttpRouter) AddRouteGET(routeId, path string, handler HttpHandler, params ...HttpParam) {
 	route := CreateHttpRoute(path, params, handler)
 	this.routes[routeId] = route
-	this.router.GET(path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	this.addRoute(this.router.GET, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		paramValues := route.getParamValues(r, ps)
 		handler(w, r, paramValues)
 	})
@@ -143,7 +149,7 @@ func (this *HttpRouter) AddRouteGET(routeId, path string, handler HttpHandler, p
 func (this *HttpRouter) AddRoutePOST(routeId, path string, handler HttpHandler, params ...HttpParam, ) {
 	route := CreateHttpRoute(path, params, handler)
 	this.routes[routeId] = route
-	this.router.POST(path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	this.addRoute(this.router.POST, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		paramValues := route.getParamValues(r, ps)
 		handler(w, r, paramValues)
 	})
@@ -155,4 +161,10 @@ func (this *HttpRouter) AddNotFoundRoute(handler http.HandlerFunc) {
 
 func (this *HttpRouter) ListenAndServe(addr string) error {
 	return http.ListenAndServe(addr, this.router)
+}
+
+func (this *HttpRouter) addRoute(routerMethod func (string, httprouter.Handle), route string, handler httprouter.Handle) {
+	routeNoTrailingSlash := strings.TrimRight(route, "/")
+	routerMethod(routeNoTrailingSlash, handler)
+	routerMethod(routeNoTrailingSlash + "/", handler)
 }
