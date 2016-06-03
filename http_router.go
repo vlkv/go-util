@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"fmt"
 	"strings"
+	"net/url"
+	"pine_facade/vendor/github.com/vlkv/go-util"
 )
 
 
@@ -41,7 +43,39 @@ type HttpRoute struct {
 	Handler HttpHandler
 }
 
-func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map[string]interface{} {
+func (this *HttpRoute) getAllParams() []HttpParam {
+	result := make([]HttpParam, 0, len(this.UrlParams) + len(this.QueryParams) + len(this.FormParams))
+	result = append(result, this.UrlParams)
+	result = append(result, this.QueryParams)
+	result = append(result, this.FormParams)
+	return result
+}
+
+func (this *HttpRoute) getAllOptionalParams() []HttpParam {
+	result := make([]HttpParam, 0)
+	allParams := this.getAllParams()
+	for i := range allParams {
+		p := allParams[i]
+		if (p.IsOptional()) {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+func (this *HttpRoute) getAllRequiredParams() []HttpParam {
+	result := make([]HttpParam, 0)
+	allParams := this.getAllParams()
+	for i := range allParams {
+		p := allParams[i]
+		if (p.IsRequired()) {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+func (this *HttpRoute) parseParamValues(r *http.Request, ps httprouter.Params) map[string]interface{} {
 	paramValues := map[string]interface{}{}
 	for _, p := range this.UrlParams {
 		if p.IsMultiple {
@@ -210,4 +244,76 @@ func (this *HttpRouter) addRoute(methodFunc func (string, httprouter.Handle), ro
 	routeNoTrailingSlash := strings.TrimRight(route, "/")
 	methodFunc(routeNoTrailingSlash, handler)
 	methodFunc(routeNoTrailingSlash + "/", handler)
+}
+
+
+
+type HttpRequestParams struct {
+	URL string
+	Data url.Values
+	hasQueryValuesAdded
+}
+
+func (this *HttpRequestParams) addParamValue(paramType HttpParamType, paramName string, paramValue string) {
+	switch paramType {
+	case HttpParamType_URL:
+		this.URL = strings.Replace(this.URL, ":" + paramName, paramValue)
+	case HttpParamType_Query:
+		if this.hasQueryValuesAdded {
+			this.URL = this.URL + "&" + paramName + "=" + paramValue
+		} else {
+			this.URL = this.URL + "?" + paramName + "=" + paramValue
+		}
+	case HttpParamType_Form:
+		this.Data.Add(paramName, paramValue)
+	}
+}
+
+func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[string]interface{}) HttpRequestParams {
+	route, ok := this.routes[routeId]
+	if !ok {
+		panic(errors.New(fmt.Sprintf("Route %v not found", routeId)))
+	}
+
+	result := HttpRequestParams{ URL: route.Path }
+
+	// Process all required params, panic if some values are missing
+	reqParams := route.getAllRequiredParams()
+	for i := range reqParams {
+		p := reqParams[i]
+		if p.IsMultiple {
+			panic(errors.New(fmt.Sprintf("Multiple parameter cannot be required, %v", p.Name)))
+		}
+		value, ok := paramValues[p.Name]
+		if !ok {
+			panic(errors.New(fmt.Sprintf("Value for required param %v is missing", p.Name)))
+		}
+		result.addParamValue(p.Type, p.Name, value.(string))
+	}
+
+	// Process all optional params, use defaults where needed
+	optParams := route.getAllOptionalParams()
+	for i := range optParams {
+		p := optParams[i]
+
+		if !p.IsMultiple {
+			value, ok := paramValues[p.Name]
+			if !ok {
+				value = p.DefaultValue
+			}
+			result.addParamValue(p.Type, p.Name, value.(string))
+		} else {
+			// TODO: Maybe support DefaultValue, it could be a string or maybe even a []string...
+			values, ok := paramValues[p.Name]
+			if !ok {
+				values = []string{}
+			}
+			for j := range values.([]string) {
+				value := values[j]
+				result.addParamValue(p.Type, p.Name, value)
+			}
+		}
+	}
+
+	return result
 }
