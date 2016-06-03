@@ -283,11 +283,11 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 	for i := range reqParams {
 		p := reqParams[i]
 		if p.IsMultiple {
-			panic(errors.New(fmt.Sprintf("Multiple parameter cannot be required, %v", p.Name)))
+			panic(errors.New(fmt.Sprintf("Multiple parameter cannot be required, %v, route: %v", p.Name, routeId)))
 		}
 		value, ok := paramValues[p.Name]
 		if !ok {
-			panic(errors.New(fmt.Sprintf("Value for required param %v is missing", p.Name)))
+			panic(errors.New(fmt.Sprintf("Value for required param %v is missing, route: %v", p.Name, routeId)))
 		}
 		result.addParamValue(p.Type, p.Name, value.(string))
 	}
