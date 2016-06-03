@@ -37,7 +37,7 @@ func (this *HttpRoute) getParamValues(r *http.Request, ps httprouter.Params) map
 	paramValues := map[string]interface{}{}
 	for _, p := range this.UrlParams {
 		if p.IsMultiple {
-			panic(errors.New("You should not use both IsMultiple=true for URL param"))
+			panic(errors.New("You cannot not use IsMultiple=true for URL param"))
 		}
 		var val string
 		if p.IsRequired() {
