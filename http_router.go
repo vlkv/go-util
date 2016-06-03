@@ -263,6 +263,7 @@ func (this *HttpRequestParams) addParamValue(paramType HttpParamType, paramName 
 			this.URL = this.URL + "&" + paramName + "=" + paramValue
 		} else {
 			this.URL = this.URL + "?" + paramName + "=" + paramValue
+			this.hasQueryValuesAdded = true
 		}
 	case HttpParamType_Form:
 		this.Data.Add(paramName, paramValue)
