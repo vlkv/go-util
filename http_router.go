@@ -249,6 +249,7 @@ func (this *HttpRouter) addRoute(methodFunc func (string, httprouter.Handle), ro
 
 type HttpRequestParams struct {
 	URL string
+	Method HttpMethod
 	Data url.Values
 	hasQueryValuesAdded bool
 }
@@ -274,7 +275,7 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 		panic(errors.New(fmt.Sprintf("Route %v not found", routeId)))
 	}
 
-	result := HttpRequestParams{ URL: route.Path }
+	result := HttpRequestParams{ URL: route.Path, Method: route.Method }
 
 	// Process all required params, panic if some values are missing
 	reqParams := route.getAllRequiredParams()
@@ -304,10 +305,11 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 		} else {
 			values, ok := paramValues[p.Name]
 			if !ok {
-				values = make([]string, 0)
+				defValues := make([]string, 0)
 				if p.DefaultValue != "" {
-					values = append(values, p.DefaultValue) // NOTE: We support only non-multiple DefaultValue
+					defValues = append(defValues, p.DefaultValue) // NOTE: We support only non-multiple DefaultValue
 				}
+				values = defValues
 			}
 			stringValues := values.([]string)
 			for j := range stringValues {
