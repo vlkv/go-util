@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 	"net/url"
-	"pine_facade/vendor/github.com/vlkv/go-util"
 )
 
 
@@ -45,9 +44,9 @@ type HttpRoute struct {
 
 func (this *HttpRoute) getAllParams() []HttpParam {
 	result := make([]HttpParam, 0, len(this.UrlParams) + len(this.QueryParams) + len(this.FormParams))
-	result = append(result, this.UrlParams)
-	result = append(result, this.QueryParams)
-	result = append(result, this.FormParams)
+	result = append(result, this.UrlParams...)
+	result = append(result, this.QueryParams...)
+	result = append(result, this.FormParams...)
 	return result
 }
 
@@ -225,7 +224,7 @@ func (this *HttpRouter) addAllDeclaredRoutes() {
 		}
 
 		this.addRoute(methodFunc, route.Path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			paramValues := route.getParamValues(r, ps)
+			paramValues := route.parseParamValues(r, ps)
 			route.Handler(routeId, w, r, paramValues)
 		})
 	}
@@ -251,13 +250,13 @@ func (this *HttpRouter) addRoute(methodFunc func (string, httprouter.Handle), ro
 type HttpRequestParams struct {
 	URL string
 	Data url.Values
-	hasQueryValuesAdded
+	hasQueryValuesAdded bool
 }
 
 func (this *HttpRequestParams) addParamValue(paramType HttpParamType, paramName string, paramValue string) {
 	switch paramType {
 	case HttpParamType_URL:
-		this.URL = strings.Replace(this.URL, ":" + paramName, paramValue)
+		this.URL = strings.Replace(this.URL, ":" + paramName, paramValue, -1)
 	case HttpParamType_Query:
 		if this.hasQueryValuesAdded {
 			this.URL = this.URL + "&" + paramName + "=" + paramValue
@@ -308,8 +307,9 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 			if !ok {
 				values = []string{}
 			}
-			for j := range values.([]string) {
-				value := values[j]
+			stringValues := values.([]string)
+			for j := range stringValues {
+				value := stringValues[j]
 				result.addParamValue(p.Type, p.Name, value)
 			}
 		}
