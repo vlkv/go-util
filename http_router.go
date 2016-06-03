@@ -302,10 +302,12 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 			}
 			result.addParamValue(p.Type, p.Name, value.(string))
 		} else {
-			// TODO: Maybe support DefaultValue, it could be a string or maybe even a []string...
 			values, ok := paramValues[p.Name]
 			if !ok {
-				values = []string{}
+				values = make([]string, 0)
+				if p.DefaultValue != "" {
+					values = append(values, p.DefaultValue) // NOTE: We support only non-multiple DefaultValue
+				}
 			}
 			stringValues := values.([]string)
 			for j := range stringValues {
