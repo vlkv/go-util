@@ -155,10 +155,11 @@ const (
 	HttpMethod_POST
 )
 
-func CreateHttpRoute(path string, method HttpMethod, params []HttpParam, handler HttpHandler) HttpRoute {
+func NewHttpRoute(path string, method HttpMethod, params []HttpParam, handler HttpHandler) *HttpRoute {
 	re := regexp.MustCompile(":[\\w-]+")
 	urlParams := re.FindAllString(path, -1)
-	for _, urlParam := range urlParams {
+	for i := range urlParams {
+		urlParam := urlParams[i]
 		name := urlParam[1:]
 		i := FindIndex(len(params), func(i int) bool { return params[i].Name == name })
 		if i < 0 {
@@ -168,7 +169,8 @@ func CreateHttpRoute(path string, method HttpMethod, params []HttpParam, handler
 
 	filterParams := func (t HttpParamType, params []HttpParam) []HttpParam {
 		result := make([]HttpParam, 0)
-		for _, p := range params {
+		for i, _ := range params {
+			p := params[i]
 			if p.Type == t {
 				result = append(result, p)
 			}
@@ -176,24 +178,24 @@ func CreateHttpRoute(path string, method HttpMethod, params []HttpParam, handler
 		return result
 	}
 
-	return HttpRoute{
-		Path: path,
-		Method: method,
-		UrlParams: filterParams(HttpParamType_URL, params),
-		QueryParams: filterParams(HttpParamType_Query, params),
-		FormParams: filterParams(HttpParamType_Form, params),
-		Handler: handler,
-	}
+	result := new(HttpRoute)
+	result.Path = path
+	result.Method = method
+	result.UrlParams = filterParams(HttpParamType_URL, params)
+	result.QueryParams = filterParams(HttpParamType_Query, params)
+	result.FormParams = filterParams(HttpParamType_Form, params)
+	result.Handler = handler
+	return result
 }
 
 func (this *HttpRouter) DeclareRouteGET(routeId HttpRouteId, path string, handler HttpHandler, params ...HttpParam) {
-	route := CreateHttpRoute(path, HttpMethod_GET, params, handler)
-	this.routes[routeId] = &route
+	route := NewHttpRoute(path, HttpMethod_GET, params, handler)
+	this.routes[routeId] = route
 }
 
 func (this *HttpRouter) DeclareRoutePOST(routeId HttpRouteId, path string, handler HttpHandler, params ...HttpParam) {
-	route := CreateHttpRoute(path, HttpMethod_POST, params, handler)
-	this.routes[routeId] = &route
+	route := NewHttpRoute(path, HttpMethod_POST, params, handler)
+	this.routes[routeId] = route
 }
 
 func (this *HttpRouter) BindRoute(routeId HttpRouteId, handler HttpHandler) {
@@ -208,8 +210,8 @@ func (this *HttpRouter) BindRoute(routeId HttpRouteId, handler HttpHandler) {
 }
 
 func (this *HttpRouter) addAllDeclaredRoutes() {
-	for routeId, _ := range this.routes {
-		route := this.routes[routeId]
+	for k, _ := range this.routes {
+		route := this.routes[k]
 		var methodFunc func (string, httprouter.Handle)
 		if route.Method == HttpMethod_GET {
 			methodFunc = this.router.GET
@@ -223,6 +225,7 @@ func (this *HttpRouter) addAllDeclaredRoutes() {
 			panic(errors.New(fmt.Sprintf("Route %v has unbinded handler, cannot use such route", route.Path)))
 		}
 
+		routeId := k // ATTENTION: We need a copy of the outer routeId to put in the closure
 		this.addRoute(methodFunc, route.Path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			paramValues := route.parseParamValues(r, ps)
 			route.Handler(routeId, w, r, paramValues)
