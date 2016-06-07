@@ -254,6 +254,10 @@ type HttpRequestParams struct {
 	hasQueryValuesAdded bool
 }
 
+func CreateHttpRequestParams(routePath string, routeMethod HttpMethod) HttpRequestParams {
+	return HttpRequestParams{ URL: routePath, Method: routeMethod, Data: url.Values{} }
+}
+
 func (this *HttpRequestParams) addParamValue(paramType HttpParamType, paramName string, paramValue string) {
 	switch paramType {
 	case HttpParamType_URL:
@@ -276,7 +280,7 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 		panic(errors.New(fmt.Sprintf("Route %v not found", routeId)))
 	}
 
-	result := HttpRequestParams{ URL: route.Path, Method: route.Method }
+	result := CreateHttpRequestParams(route.Path, route.Method)
 
 	// Process all required params, panic if some values are missing
 	reqParams := route.getAllRequiredParams()
