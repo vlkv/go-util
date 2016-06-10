@@ -31,6 +31,7 @@ func (this HttpRouteId) String() string {
 	return string(this)
 }
 
+// TODO: use typedef for paramValues map[string]interface{}
 type HttpHandler func(routeId HttpRouteId, w http.ResponseWriter, r *http.Request, paramValues map[string]interface{})
 
 type HttpRoute struct {

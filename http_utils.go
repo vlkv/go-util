@@ -46,6 +46,16 @@ func HttpPostExt(url string, data url.Values, additionalHeaders map[string]strin
 	return
 }
 
+func HttpGetExtRaw(url string, additionalHeaders map[string]string) (code int, body string) {
+	code, body = httpGet(url, additionalHeaders)
+	return
+}
+
+func HttpPostExtRaw(url string, data url.Values, additionalHeaders map[string]string) (code int, body string) {
+	code, body = httpPost(url, data, additionalHeaders)
+	return
+}
+
 func httpGet(url string, additionalHeaders map[string]string) (code int, body string) {
 	log.Debugf("Sending GET %s", url)
 	var client = http.Client{}
