@@ -17,6 +17,10 @@ func (this *ActiveObject) Create(messageProcessor func() bool) {
 	this.Create2(messageProcessor, 0)
 }
 
+func (this *ActiveObject) Create1(cmdPoolSize int) {
+	this.Create2(nil, cmdPoolSize)
+}
+
 func (this *ActiveObject) Create2(messageProcessor func() bool, cmdPoolSize int) {
 	this.chStopWork = make(chan interface{})
 	this.cmdCh = make(chan func(), cmdPoolSize)
