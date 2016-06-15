@@ -263,6 +263,9 @@ func CreateHttpRequestParams(routePath string, routeMethod HttpMethod) HttpReque
 }
 
 func (this *HttpRequestParams) addParamValue(paramType HttpParamType, paramName string, paramValue string) {
+	if paramValue == "" {
+		panic(fmt.Errorf("Empty string cannot be used as param value, param: %v", paramName))
+	}
 	switch paramType {
 	case HttpParamType_URL:
 		this.URL = strings.Replace(this.URL, ":" + paramName, paramValue, -1)
@@ -297,7 +300,11 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 		if !ok {
 			panic(errors.New(fmt.Sprintf("Value for required param %v is missing, route: %v", p.Name, routeId)))
 		}
-		result.addParamValue(p.Type, p.Name, value.(string))
+		valueStr := value.(string)
+		if valueStr == "" {
+			panic(fmt.Errorf("Cannot use empty string as value for required parameter %v, route: %v", p.Name, routeId))
+		}
+		result.addParamValue(p.Type, p.Name, valueStr)
 	}
 
 	// Process all optional params, use defaults where needed
@@ -308,9 +315,13 @@ func (this *HttpRouter) CreateHttpRequest(routeId HttpRouteId, paramValues map[s
 		if !p.IsMultiple {
 			value, ok := paramValues[p.Name]
 			if !ok {
+				if p.DefaultValue == "" {
+					continue
+				}
 				value = p.DefaultValue
 			}
 			result.addParamValue(p.Type, p.Name, value.(string))
+
 		} else {
 			values, ok := paramValues[p.Name]
 			if !ok {
