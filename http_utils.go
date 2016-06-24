@@ -11,8 +11,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"bytes"
 	"strconv"
-
 )
+
+var HttpClient = http.Client{}
 
 func HttpGet(url string) (code int, jsonObj interface{}) {
 	code, body := httpGet(url, map[string]string{})
@@ -58,7 +59,6 @@ func HttpPostExtRaw(url string, data url.Values, additionalHeaders map[string]st
 
 func httpGet(url string, additionalHeaders map[string]string) (code int, body string) {
 	log.Debugf("Sending GET %s", url)
-	var client = http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Panicf("Could not create new request, reason %v", err)
@@ -67,7 +67,7 @@ func httpGet(url string, additionalHeaders map[string]string) (code int, body st
 		req.Header.Add(k, v)
 	}
 	req.Close = true
-	resp, err := client.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		log.Panicf("Could not process GET request, reason %v", err)
 	}
@@ -83,7 +83,6 @@ func httpGet(url string, additionalHeaders map[string]string) (code int, body st
 
 func httpPost(url string, data url.Values, additionalHeaders map[string]string) (code int, body string) {
 	log.Debugf("Sending POST %s", url)
-	var client = http.Client{}
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data.Encode()))
 	if err != nil {
 		log.Panicf("Could not create new request, reason %v", err)
@@ -95,7 +94,7 @@ func httpPost(url string, data url.Values, additionalHeaders map[string]string) 
 	}
 
 	req.Close = true
-	resp, err := client.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		log.Panicf("Could not process POST request, reason %v", err)
 	}
